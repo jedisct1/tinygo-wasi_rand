@@ -19,4 +19,4 @@ func main() {
 }
 ```
 
-`wasi_rand.Read()` can fill buffers of arbitrary size.
+`wasi_rand.Read()` can fill buffers of arbitrary sizes.
