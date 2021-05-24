@@ -19,4 +19,4 @@ func main() {
 }
 ```
 
-`wasi_rand.Read()` can return any output size.
+`wasi_rand.Read()` can fill buffers of arbitrary size.
