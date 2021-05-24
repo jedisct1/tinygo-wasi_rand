@@ -1,6 +1,6 @@
 // wasi_rand: random number generator for TinyGo/WASI
 //
-// This is essentially the HASH_DRBG construction instantiated with the SHA-512 hash function,
+// This is essentially the HASH_DRBG construction instantiated with the SHA-512 hash function
 // and a 64-bit non-deterministic counter.
 
 package wasi_rand
