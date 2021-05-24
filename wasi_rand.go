@@ -50,6 +50,26 @@ func (r *reader) update() {
 	r.ctr += 1
 }
 
+func (r *reader) seedIfNeeded() error {
+	if r.initialized {
+		return nil
+	}
+	if err := getRandom(r.block[0:64]); err != nil {
+		return err
+	}
+	hasher := sha512.New()
+	hasher.Write([]byte{0x00})
+	copy(r.c[:], hasher.Sum(r.block[:]))
+	hasher.Reset()
+	hasher.Write([]byte{0x04})
+	var ctr0 [8]byte
+	copy(ctr0[:], hasher.Sum(r.block[:]))
+	r.ctr = binary.LittleEndian.Uint64(ctr0[:])
+	r.update()
+	r.initialized = true
+	return nil
+}
+
 /// Reseed - Mix additional entropy into the state.
 func (r *reader) Reseed() error {
 	hasher := sha512.New()
@@ -77,21 +97,9 @@ func (r *reader) Reseed() error {
 
 func (r *reader) Read(b []byte) (int, error) {
 	r.mu.Lock()
-	if !r.initialized {
-		if err := getRandom(r.block[0:64]); err != nil {
-			r.mu.Unlock()
-			return -1, err
-		}
-		hasher := sha512.New()
-		hasher.Write([]byte{0x00})
-		copy(r.c[:], hasher.Sum(r.block[:]))
-		hasher.Reset()
-		hasher.Write([]byte{0x04})
-		var ctr0 [8]byte
-		copy(ctr0[:], hasher.Sum(r.block[:]))
-		r.ctr = binary.LittleEndian.Uint64(ctr0[:])
-		r.update()
-		r.initialized = true
+	if err := r.seedIfNeeded(); err != nil {
+		r.mu.Unlock()
+		return -1, err
 	}
 	var v0 [64]byte
 	copy(v0[:], r.block[:])
