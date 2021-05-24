@@ -18,6 +18,7 @@ import (
 //export random_get
 func _wasi_random_get(buf unsafe.Pointer, len uint32) (errno uint16)
 
+// Get entropy bits from the WebAssembly runtime.
 func getRandom(p []byte) error {
 	if _wasi_random_get(unsafe.Pointer(&p[0]), uint32(len(p))) != 0 {
 		return errors.New("no entropy source")
@@ -33,6 +34,8 @@ type reader struct {
 	initialized bool
 }
 
+// Update the state after secret data has been generated.
+// state = state + H(state) + C + c
 func (r *reader) update() {
 	hasher := sha512.New()
 	hasher.Write([]byte{0x03})
@@ -50,6 +53,7 @@ func (r *reader) update() {
 	r.ctr += 1
 }
 
+// Seed the generator using WASI's entropy source.
 func (r *reader) seedIfNeeded() error {
 	if r.initialized {
 		return nil
@@ -95,6 +99,9 @@ func (r *reader) Reseed() error {
 	return nil
 }
 
+/// Read - Fill `b` with cryptographically-secure random bytes.
+/// Returns the number if bytes actually written.
+/// Applications should generally use `wasi_rand.Reader` instead.
 func (r *reader) Read(b []byte) (int, error) {
 	r.mu.Lock()
 	if err := r.seedIfNeeded(); err != nil {
@@ -140,6 +147,8 @@ func newReader() io.Reader {
 var Reader io.Reader = newReader()
 
 /// Read - Fill `b` with cryptographically-secure random bytes.
+/// For compatibility with similar functions from the Go standard library, this function returns the number of bytes that have been written.
+/// However, unless an error occurred, it is guaranteed to always be equal to the length of `b`.
 func Read(b []byte) (n int, err error) {
 	return io.ReadFull(Reader, b)
 }
