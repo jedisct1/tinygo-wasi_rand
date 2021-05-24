@@ -1,4 +1,4 @@
-# CSPRNG for TinyGo/WebAssembly (WASI)
+# A CSPRNG for TinyGo/WebAssembly (WASI)
 
 TinyGo doesn't support `crypto/rand` yet, which is quite of a deal breaker for many cryptographic operations.
 
